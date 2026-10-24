@@ -2,6 +2,7 @@ import { useState, type FormEvent, type KeyboardEvent } from "react";
 import type { Explanation, FollowUpMessage } from "../domain/explanation-types";
 import type { SourceRange } from "../domain/source-ranges";
 import { GraphView } from "./GraphView";
+import { SpeechReader } from "./SpeechReader";
 import { SourceRanges } from "./SourceRanges";
 import { UnderstandingCheck } from "./UnderstandingCheck";
 
@@ -52,6 +53,7 @@ export function ExplanationResult({
       <div className="explanation-content">
         <h2 id="explanation-title" tabIndex={-1}>{explanation.title}</h2>
         <p className="result-summary">{explanation.summary}</p>
+        <SpeechReader explanation={explanation} />
         {explanation.concepts.length > 0 && <div className="result-section"><div className="section-caption">KEY IDEAS</div><div className="concept-grid">{explanation.concepts.map((concept, index) => <article className="concept-card" key={`${concept.term}-${index}`}><h3>{concept.term}</h3><p>{concept.explanation}</p><SourceRanges ranges={concept.source_ranges} lineCount={lineCount} onSelectRange={onSelectRange} /></article>)}</div></div>}
         {explanation.walkthrough.length > 0 && <div className="result-section walkthrough-section"><div className="section-caption">WALKTHROUGH</div><div className="walkthrough-list">{explanation.walkthrough.map((step, index) => <article className="walkthrough-item" key={`${step.heading}-${index}`}><div className="walkthrough-heading"><span className="number-badge">{index + 1}</span><div><h3>{step.heading}</h3></div></div><p className="result-body">{step.explanation}</p><SourceRanges ranges={step.source_ranges} lineCount={lineCount} onSelectRange={onSelectRange} /></article>)}</div></div>}
         {activeVisual && <div className="result-section">
@@ -82,7 +84,11 @@ export function ExplanationResult({
         <form className="followup-form" onSubmit={onAskFollowUp}>
           <label className="visually-hidden" htmlFor="followup-question">Your follow-up question</label>
           <textarea id="followup-question" value={followUpQuestion} onChange={(event) => onFollowUpQuestionChange(event.target.value)} placeholder={selectedTextForQuestion ? "Ask about the selected passage…" : "What would you like to explore further?"} maxLength={4000} rows={2} />
-          <button className="followup-submit" type="submit" disabled={!followUpQuestion.trim() || isAskingFollowUp}>{isAskingFollowUp ? "Thinking…" : "Ask"}<span>{isAskingFollowUp ? "◌" : "→"}</span></button>
+          <button className="followup-submit followup-submit-icon" type="submit" disabled={!followUpQuestion.trim() || isAskingFollowUp} aria-label={isAskingFollowUp ? "Sending question" : "Ask follow-up question"} title={isAskingFollowUp ? "Sending question" : "Ask"}>
+            {isAskingFollowUp
+              ? <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8" strokeDasharray="18 32" /></svg>
+              : <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>}
+          </button>
         </form>
         {followUpError && <div className="followup-error" role="alert">{followUpError}</div>}
       </section>
