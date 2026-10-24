@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReactFlow, Background, Handle, Position, BaseEdge, EdgeLabelRenderer, getSmoothStepPath, type EdgeProps, type NodeProps, type ReactFlowInstance } from "@xyflow/react";
 import { isValidRange, type SourceRange } from "../domain/source-ranges";
+import { themeAccents, type ThemeMode } from "../domain/theme";
 import { createGraphLayout, type DiagramVisual, type FlowEdge, type FlowNode } from "./graph-layout";
 
-export function GraphView({ visual, theme, lineCount, source, onSelectRange }: { visual: DiagramVisual & { title: string }; theme: "light" | "dark"; lineCount: number; source: string; onSelectRange: (range: SourceRange) => void }) {
+export function GraphView({ visual, theme, lineCount, source, onSelectRange }: { visual: DiagramVisual & { title: string }; theme: ThemeMode; lineCount: number; source: string; onSelectRange: (range: SourceRange) => void }) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showFitControl, setShowFitControl] = useState(false);
   const flowCanvas = useRef<HTMLDivElement>(null);
@@ -57,7 +58,7 @@ export function GraphView({ visual, theme, lineCount, source, onSelectRange }: {
         edges={layout.edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        colorMode={theme}
+        colorMode={theme === "dark" ? "dark" : "light"}
         minZoom={0.12}
         maxZoom={1.5}
         nodesDraggable
@@ -69,7 +70,7 @@ export function GraphView({ visual, theme, lineCount, source, onSelectRange }: {
         onSelectionChange={({ nodes }) => setSelectedNodeId(nodes[0]?.id ?? null)}
         aria-label={visual.kind === "control_flow" ? "Control flow diagram" : "Concept map"}
       >
-        <Background color={theme === "dark" ? "#343747" : "#e8e6f2"} gap={22} size={1} />
+        <Background color={themeAccents[theme].canvas} gap={22} size={1} />
       </ReactFlow>
       {showFitControl && <button className="diagram-fit-control" type="button" onClick={fitGraph}>Fit diagram</button>}
     </div> : <p className="empty-graph">No visual relationships were generated.</p>}

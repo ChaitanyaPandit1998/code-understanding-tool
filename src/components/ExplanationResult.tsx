@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import type { Explanation, FollowUpMessage } from "../domain/explanation-types";
 import type { SourceRange } from "../domain/source-ranges";
+import type { ThemeMode } from "../domain/theme";
 import { GraphView } from "./GraphView";
 import { SpeechReader } from "./SpeechReader";
 import { SourceRanges } from "./SourceRanges";
@@ -11,7 +12,7 @@ export type TextSelection = { text: string; top: number; left: number; wasTrunca
 type Props = {
   explanation: Explanation;
   source: string;
-  theme: "light" | "dark";
+  theme: ThemeMode;
   lineCount: number;
   isAskingFollowUp: boolean;
   copyStatus: string;

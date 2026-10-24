@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { isValidRange, sourceOffsetsForRange, type SourceRange } from "./domain/source-ranges";
 import type { ExplanationDepth, LearnerLevel, Mode, Transcription } from "./domain/explanation-types";
+import { isThemeMode, type ThemeMode } from "./domain/theme";
 import { useExplanationSession } from "./hooks/useExplanationSession";
 import { LearningWorkspace } from "./components/LearningWorkspace";
 import { ExplanationResult, type TextSelection } from "./components/ExplanationResult";
@@ -15,9 +16,10 @@ const exampleCode = `function retry<T>(operation: () => Promise<T>, attempts = 3
 
 function App() {
   const [pageZoom, setPageZoom] = useState(100);
-  const [pageTheme, setPageTheme] = useState<"light" | "dark">(() => {
+  const [pageTheme, setPageTheme] = useState<ThemeMode>(() => {
     try {
-      return localStorage.getItem("understand-theme") === "dark" ? "dark" : "light";
+      const savedTheme = localStorage.getItem("understand-theme");
+      return isThemeMode(savedTheme) ? savedTheme : "light";
     } catch {
       return "light";
     }
