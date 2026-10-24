@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import type { Explanation, FollowUpMessage } from "../domain/explanation-types";
 import type { SourceRange } from "../domain/source-ranges";
 import { GraphView } from "./GraphView";
@@ -32,6 +32,20 @@ export function ExplanationResult({
   selectedTextForQuestion, followUpMessages, followUpError, textSelection, onCopy, onSelectRange,
   onFollowUpQuestionChange, onAskFollowUp, onClearSelectedTextContext, onAskAboutSelectedText,
 }: Props) {
+  const [activeVisualIndex, setActiveVisualIndex] = useState(0);
+  const activeVisual = explanation.visuals[activeVisualIndex] ?? explanation.visuals[0];
+  const selectVisualFromKeyboard = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const lastIndex = explanation.visuals.length - 1;
+    let nextIndex = index;
+    if (event.key === "ArrowRight") nextIndex = index === lastIndex ? 0 : index + 1;
+    else if (event.key === "ArrowLeft") nextIndex = index === 0 ? lastIndex : index - 1;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = lastIndex;
+    else return;
+    event.preventDefault();
+    setActiveVisualIndex(nextIndex);
+    document.getElementById(`diagram-tab-${nextIndex}`)?.focus();
+  };
   return <>
     <section className="result-card" aria-labelledby="explanation-title" aria-busy={isAskingFollowUp}>
       <div className="result-topline"><span className="result-label"><span className="result-spark">✳</span> YOUR EXPLANATION</span><div className="result-actions"><button className="copy-explanation" type="button" onClick={onCopy}>{copyStatus || "Copy explanation"}</button><span className="preview-badge">EXPLANATION</span></div></div>
@@ -39,8 +53,18 @@ export function ExplanationResult({
         <h2 id="explanation-title" tabIndex={-1}>{explanation.title}</h2>
         <p className="result-summary">{explanation.summary}</p>
         {explanation.concepts.length > 0 && <div className="result-section"><div className="section-caption">KEY IDEAS</div><div className="concept-grid">{explanation.concepts.map((concept, index) => <article className="concept-card" key={`${concept.term}-${index}`}><h3>{concept.term}</h3><p>{concept.explanation}</p><SourceRanges ranges={concept.source_ranges} lineCount={lineCount} onSelectRange={onSelectRange} /></article>)}</div></div>}
-        {explanation.walkthrough.length > 0 && <div className="result-section"><div className="section-caption">WALKTHROUGH</div><div className="walkthrough-list">{explanation.walkthrough.map((step, index) => <article className="walkthrough-item" key={`${step.heading}-${index}`}><div className="walkthrough-heading"><span className="number-badge">{index + 1}</span><div><h3>{step.heading}</h3></div></div><p className="result-body">{step.explanation}</p><SourceRanges ranges={step.source_ranges} lineCount={lineCount} onSelectRange={onSelectRange} /></article>)}</div></div>}
-        {explanation.visual && <div className="result-section"><div className="section-caption">{explanation.visual.kind === "control_flow" ? "CONTROL FLOW MAP" : "CONCEPT MAP"}</div><GraphView visual={explanation.visual} theme={theme} lineCount={lineCount} source={source} onSelectRange={onSelectRange} /></div>}
+        {explanation.walkthrough.length > 0 && <div className="result-section walkthrough-section"><div className="section-caption">WALKTHROUGH</div><div className="walkthrough-list">{explanation.walkthrough.map((step, index) => <article className="walkthrough-item" key={`${step.heading}-${index}`}><div className="walkthrough-heading"><span className="number-badge">{index + 1}</span><div><h3>{step.heading}</h3></div></div><p className="result-body">{step.explanation}</p><SourceRanges ranges={step.source_ranges} lineCount={lineCount} onSelectRange={onSelectRange} /></article>)}</div></div>}
+        {activeVisual && <div className="result-section">
+          <div className="section-caption">{activeVisual.kind === "control_flow" ? "CONTROL FLOW MAP" : "CONCEPT MAP"}</div>
+          {explanation.visuals.length > 1 && <div className="diagram-view-tabs" role="tablist" aria-label="Diagram views">{explanation.visuals.map((visual, index) => <button key={`${visual.title}-${index}`} type="button" role="tab" id={`diagram-tab-${index}`} aria-selected={index === activeVisualIndex} aria-controls="active-diagram-panel" tabIndex={index === activeVisualIndex ? 0 : -1} onKeyDown={(event) => selectVisualFromKeyboard(event, index)} onClick={() => setActiveVisualIndex(index)}>{visual.title}</button>)}</div>}
+          <div id="active-diagram-panel" role={explanation.visuals.length > 1 ? "tabpanel" : undefined} aria-labelledby={explanation.visuals.length > 1 ? `diagram-tab-${activeVisualIndex}` : undefined} tabIndex={explanation.visuals.length > 1 ? 0 : undefined}><GraphView visual={activeVisual} theme={theme} lineCount={lineCount} source={source} onSelectRange={onSelectRange} /></div>
+        </div>}
+        {explanation.visuals.length > 0 && <div className="diagram-gallery-print" aria-hidden="true">{explanation.visual_note && <p className="diagram-print-note"><strong>Coverage note:</strong> {explanation.visual_note}</p>}{explanation.visuals.map((visual, index) => <section className="diagram-print-alternative" key={`${visual.title}-${index}`}>
+          <h3>{visual.title}</h3>
+          <ol>{visual.nodes.map((node) => <li key={node.id}><strong>{node.label}.</strong> {node.description}</li>)}</ol>
+          {visual.edges.length > 0 && <ul>{visual.edges.map((edge, edgeIndex) => <li key={`${edge.from}-${edge.to}-${edgeIndex}`}>{visual.nodes.find((node) => node.id === edge.from)?.label ?? edge.from} {edge.label ? `(${edge.label})` : "connects to"} {visual.nodes.find((node) => node.id === edge.to)?.label ?? edge.to}.</li>)}</ul>}
+        </section>)}</div>}
+        {explanation.visual_note && <p className={`visual-omitted-note ${explanation.visuals.length > 0 ? "coverage-screen-note" : ""}`}><strong>{explanation.visuals.length === 0 ? "Diagram note." : "Coverage note."}</strong> {explanation.visual_note}</p>}
         {explanation.assumptions.length > 0 && <div className="assumptions"><div className="section-caption">WHAT THE INPUT DOESN’T TELL US</div>{explanation.assumptions.map((assumption, index) => <p key={`${assumption.statement}-${index}`}><strong>{assumption.statement}</strong> {assumption.reason}</p>)}</div>}
         <UnderstandingCheck source={source} explanation={explanation} />
       </div>

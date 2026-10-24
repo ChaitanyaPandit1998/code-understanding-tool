@@ -13,7 +13,8 @@ const explanation = {
   concepts: [],
   walkthrough: [],
   assumptions: [],
-  visual: null,
+  visual_note: "",
+  visuals: [],
 };
 
 const responsesBySchemaKey: Record<string, unknown> = {
@@ -101,6 +102,38 @@ describe("local explanation API integration", () => {
     expect(runCodex).toHaveBeenCalledOnce();
     expect(runCodex.mock.calls[0]?.[0]).toContain("explanation_depth: overview");
     expect(runCodex.mock.calls[0]?.[0]).toContain("learner_level: intermediate");
+  });
+
+  it("keeps an incomplete control-flow diagram and flags uncertain coverage", async () => {
+    const incompleteExplanation = {
+      ...explanation,
+      visuals: [{
+        title: "Access flow",
+        kind: "control_flow",
+        nodes: [
+          { id: "start", label: "Check access", description: "Check the user.", source_ranges: [] },
+          { id: "denied", label: "Denied", description: "Return early.", source_ranges: [] },
+          { id: "allowed", label: "Continue", description: "Keep going.", source_ranges: [] },
+        ],
+        edges: [
+          { from: "start", to: "denied", label: "missing" },
+          { from: "start", to: "allowed", label: "present" },
+        ],
+      }],
+    };
+    const runner = vi.fn<CodexRunner>(async () => incompleteExplanation);
+    const isolatedRequest = createApiHarness(runner);
+    const response = await isolatedRequest("/api/explain", {
+      source_text: "if (!user) return false;\nconst allowed = ready ? true : false;",
+      teaching_mode: "control_flow",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.json()).toEqual({
+      ...explanation,
+      visuals: incompleteExplanation.visuals,
+      visual_note: "The diagram views are shown, but automated coverage checks could not match every source decision. Use the walkthrough and source links to verify the full behavior.",
+    });
   });
 
   it("transcribes a valid screenshot payload", async () => {

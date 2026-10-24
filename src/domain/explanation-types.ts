@@ -10,11 +10,13 @@ export type Explanation = {
   concepts: { term: string; explanation: string; source_ranges: SourceRange[] }[];
   walkthrough: { heading: string; explanation: string; source_ranges: SourceRange[] }[];
   assumptions: { statement: string; reason: string }[];
-  visual: null | {
+  visual_note: string;
+  visuals: {
+    title: string;
     kind: "control_flow" | "concept_map";
     nodes: { id: string; label: string; description: string; source_ranges: SourceRange[] }[];
     edges: { from: string; to: string; label: string }[];
-  };
+  }[];
 };
 
 export type Transcription = { transcription: string; uncertainties: { text: string; reason: string }[] };

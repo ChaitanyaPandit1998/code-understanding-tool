@@ -70,9 +70,24 @@ Build a small interactive workspace that helps a learner understand a piece of c
 
 - [x] Refactor the page into focused input, explanation, and display-control components so `App.tsx` coordinates state rather than owning all page markup.
 - [x] Add automated diagram-layout coverage for branching/converging graphs and awkward edge cases.
+- [x] Add a branch-heavy pricing-flow regression case that retains the address, threshold, expedited-shipping, and membership outcomes through layout.
+- [x] Add explicit skill guidance and a concrete branch-heavy example requiring distinct outcomes and visible convergence for every condition, including ternary expressions.
+- [x] Add a conservative server-side coverage guard that omits incomplete or ambiguously labeled control-flow diagrams, explains the omission in the UI, and preserves the written explanation.
 - [ ] Exercise the full workflows on representative short snippets, longer code, and documentation; record any explanation or source-mapping failures.
 - [ ] Revisit screenshot correction, diagram rendering in the browser, and explanation quality using learner feedback.
 - [ ] Decide whether session export, persistence, additional languages, or repository context is valuable for the next release.
+
+### Diagram fit and print behavior
+
+The React Flow canvas uses automatic fitting, resize observation, a lower zoom floor, a narrow-layout fit control, and print-specific styles. A remaining risk is visual behavior across real browser sizes and print engines:
+
+- [x] Refit the graph when it mounts and whenever its container size changes, including transitions into print layout.
+- [x] Revisit the zoom floor: allow enough zoom-out to fit, but avoid making labels unreadable. If the fit would fall below a readable scale, use the narrow-layout fallback instead.
+- [x] Add a narrow-layout fallback: keep the graph pannable and provide a clearly visible **Fit diagram** control on narrow canvases or when the fitted zoom is small.
+- [x] Add print-specific styles that replace the interactive canvas with a complete, readable text version of the diagram, avoiding clipped graphs and awkward page breaks.
+- [ ] Verify representative linear and branching graphs in a browser at wide and narrow sizes and in a printed/PDF page; adjust if any nodes, labels, or text alternative are clipped.
+
+**Done when:** visual verification confirms representative linear and branching diagrams stay within the viewport after resize, have a usable fit/pan path at narrow widths, and produce a PDF/print view where the full diagram or its complete text alternative is readable and not clipped.
 
 ## First implementation slice
 

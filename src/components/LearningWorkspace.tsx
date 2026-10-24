@@ -60,6 +60,11 @@ export function LearningWorkspace({
           </div>}
         </div>
 
+        {source.trim() && <section className="print-source-section" aria-label="Submitted source material">
+          <div className="section-caption">{mode === "code" ? "SOURCE CODE" : "SOURCE DOCUMENTATION"}</div>
+          <pre className={`print-source ${mode === "code" ? "print-source-code" : ""}`}>{source}</pre>
+        </section>}
+
         <div className="input-footer">
           <span>{source ? `${source.length.toLocaleString()} characters · ${lineCount} lines` : "Your input stays in this local session"}</span>
           <input ref={screenshotInput} className="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (file) onScreenshotSelected(file); event.currentTarget.value = ""; }} />
